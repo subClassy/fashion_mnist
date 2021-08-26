@@ -1,7 +1,14 @@
 import struct
+
 import numpy as np
-import config as cfg
+from tensorflow.keras.layers import (Activation, BatchNormalization, Conv2D,
+                                     Dense, Dropout, Flatten, MaxPooling2D)
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.utils import to_categorical
+
+import config as cfg
+
 
 def preprocess_data(x_train, x_test, img_rows, img_cols):
     
@@ -24,10 +31,11 @@ def read_idx(filename):
         shape = tuple(struct.unpack('>I', f.read(4))[0] for d in range(dims))
         return np.frombuffer(f.read(), dtype=np.uint8).reshape(shape)
 
-x_train = read_idx("./fashion/train-images-idx3-ubyte")
-y_train = read_idx("./fashion/train-labels-idx1-ubyte")
-x_test = read_idx("./fashion/t10k-images-idx3-ubyte")
-y_test = read_idx("./fashion/t10k-labels-idx1-ubyte")
+base_dir = "C:/Users/himan/Documents/cv_code/Code_TensorFlow2_Version/13. Building LeNet and AlexNet in Keras/fashion"
+x_train = read_idx(base_dir + "/train-images-idx3-ubyte")
+y_train = read_idx(base_dir + "/train-labels-idx1-ubyte")
+x_test = read_idx(base_dir + "/t10k-images-idx3-ubyte")
+y_test = read_idx(base_dir + "/t10k-labels-idx1-ubyte")
 
 batch_size = cfg.batch_size
 epochs = cfg.epochs
@@ -46,3 +54,27 @@ num_classes = y_test.shape[1]
 num_pixels = x_train.shape[1] * x_train.shape[2]
 
 
+#model
+model = Sequential()
+
+model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=input_shape))
+model.add(BatchNormalization())
+
+model.add(Conv2D(64, (3, 3), activation='relu'))
+model.add(BatchNormalization())
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Flatten())
+model.add(Dense(128, activation='relu'))
+model.add(BatchNormalization())
+
+model.add(Dropout(0.5))
+model.add(Dense(num_classes))
+model.add(Activation('softmax'))
+
+model.compile(loss = 'categorical_crossentropy',
+              optimizer = SGD(0.01),
+              metrics = ['accuracy'])
+
+print(model.summary())
